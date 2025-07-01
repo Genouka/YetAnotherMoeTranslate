@@ -58,20 +58,9 @@ object Dialogs {
         val welcome = view.findViewById<TextView>(R.id.welcome)
         val lv = view.findViewById<ListView>(R.id.menu_list)
         lv.adapter = MenuDialogAdapter(ctx,strlist,imglist)
-        val random = Math.random()
-        if(random>0.8){
-            welcome.text = ctx.getString(R.string.floating_ball_menu_1)
-            img.setImageResource(R.drawable.amazed_relax)
-        }else if(random>0.4){
-            welcome.text = ctx.getString(R.string.floating_ball_menu_2)
-            img.setImageResource(R.drawable.happy_hi)
-        }else{
-            welcome.text = ctx.getString(R.string.floating_ball_menu_3)
-            img.setImageResource(R.drawable.smile_cool)
-        }
         val dialog = AlertDialog.Builder(ctx)
             .setView(view)
-            .setCancelable(false)
+            .setCancelable(true)
             .setNegativeButton(R.string.user_cancel,null)
             .create()
         return DialogResult(dialog, lv)

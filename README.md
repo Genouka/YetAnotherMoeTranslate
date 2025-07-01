@@ -1,17 +1,33 @@
 <div align="center">
 <img src="markdown/images/head-cover.png" alt="icon"/>
 
-# 萌译MoeTranslate
+# GenOuka版本：萌译MoeTranslate
 
-一键翻译图片文字内容，让您和非中文游戏的距离不再遥远；不仅如此，还支持Gemini聊天和Live2D。
+一键翻译图片文字内容，让您和非中文游戏的距离不再遥远。
 
-更多内容请查看下方的官网。
-
-[![Web](https://img.shields.io/badge/%E7%BD%91%E7%AB%99-%E5%AE%98%E7%BD%91-red?logo=data:image/png;base64,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)](https://www.moetranslate.top)
-[![Github](https://img.shields.io/badge/Github-Release-blue?logo=Github)](https://github.com/murangogo/MoeTranslate/releases)
-[![Download](https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-Ver5.0.0-green?logo=Android&logoColor=green)](https://www.moetranslate.top/download/downloadlink/)
+[点击这里前往原版仓库](https://github.com/murangogo/MoeTranslate)
 
 </div>
+
+## 本版本与原版的区别
+
+简单说这个版本就是为了本人个人需要而制作的版本，因为改动太大所以我不会主动向原仓库合并。
+
+功能性差异：
+
+* 删除了Live2d相关功能（虽然本人很喜欢鹿目圆但不想在软件里面看到，个人原因）
+* 长按悬浮窗分三档：短按带上结果并翻译，中按不带上次结果并翻译。长按弹出菜单。设置可以调整长按时长
+* 我不明白作者为什么要阻止按对话框外部关闭，我觉得不方便所以把它删了
+* 删除了检查更新，因为这是第三方版本，避免引起用户的困惑和混乱
+* 悬浮窗透明度调低，方便看图标后面的字，减少侵入感
+
+技术性内容：
+
+* 我这边编译环境和作者不一样，微调了一下编译选项
+
+开源协议：
+
+LGPL3.0，和原协议一致，也欢迎作者根据用户痛点反向移植，如果能署上我的名字就更好了www。
 
 ## 简介
 
@@ -86,30 +102,6 @@
 > **腾讯云：** 属于在线翻译API。需要提前配置API Key方可使用。注册后即可享受**每月1万次的图片翻译免费调用次数**，一般用户足够使用。API申请方法稍微复杂一些，由于腾讯云的图片翻译仅支持单行翻译，因此当一句话多于一行时，会造成翻译严重不正确的情况。  
 > [申请教程](https://www.moetranslate.top/docs/translationapi/tencent/)  
 > 翻译质量：★★（2星）
-
-## 二、其他功能
-
-### 1、Live 2D模型查看
-
-<img src="markdown/images/l2d.png"/>
-
-得益于[Live 2D的SDK](https://www.live2d.com/sdk/about/)，萌译支持导入Live 2D模型，并自动解析模型附带的动作和表情，然后用户可选择特定的动作和表情播放，实现随时随地欣赏Live 2D角色。
-
-具体的导入教程和注意事项可[点击此处](https://www.moetranslate.top/docs/live2d/importmodel/)查看。
-
-\*图中的鹿目圆模型来自魔法纪录，在此仅作为预置模型展示软件功能，版权归原作者所有。
-
-### 2、Gemini AI聊天
-
-<img src="markdown/images/gemini.png"/>
-
-Google的Gemini正处于全民公测阶段，而且实际上Gemini模型的实力不俗，刚好其[Gemini-1.5 Flash](https://ai.google.dev/pricing#1_5flash)的API有免费方案可以使用，因此我们可获取API后在萌译中和其进行聊天。值得注意的是中国大陆用户需开启VPN后使用。
-
-具体的使用教程可[点击此处](https://www.moetranslate.top/docs/gemini/apiapplication/)查看。
-
-## 捐助项目
-
-如果您想给开发者物质上的帮助，可以[点击此处](https://www.moetranslate.top/support/)来捐赠。
 
 ## 使用到的其他开源项目
 

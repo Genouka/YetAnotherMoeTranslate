@@ -31,6 +31,7 @@ import android.widget.AdapterView
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.view.postDelayed
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -69,9 +70,9 @@ object BroadcastAction {
 data class FloatingBallConfig(
     val floatingBallInitialX: Int = 80,
     val floatingBallInitialY: Int = 200,
-    val CLICK_SLOP:Float = 5f,           // 点击判定的最大移动距离
-    val LONG_PRESS_SLOP:Float = 10f,     // 长按判定的最大移动距离
-    var LONG_PRESS_DELAY:Long = 500L   // 长按触发时间（毫秒）
+    val CLICK_SLOP: Float = 5f,           // 点击判定的最大移动距离
+    val LONG_PRESS_SLOP: Float = 10f,     // 长按判定的最大移动距离
+    var LONG_PRESS_DELAY: Long = 500L   // 长按触发时间（毫秒）
 )
 
 data class FloatingTextViewConfig(
@@ -133,6 +134,7 @@ class FloatingBallService : LifecycleService() {
     // 长按处理器
     private val handler = Handler(Looper.getMainLooper())
     private val longPressRunnable = Runnable { handleLongPress() }
+    private val notlongPressRunnable = Runnable { handlenotLongPress() }
 
     // 当前手势类型
     private var currentGesture: GestureType? = null
@@ -161,45 +163,93 @@ class FloatingBallService : LifecycleService() {
     private fun initialize() {
         // 初始化翻译API
         try {
-            if (prefs.getInt("Translate_Mode", Constants.TranslateMode.TEXT.id) == Constants.TranslateMode.TEXT.id){
+            if (prefs.getInt(
+                    "Translate_Mode",
+                    Constants.TranslateMode.TEXT.id
+                ) == Constants.TranslateMode.TEXT.id
+            ) {
                 when (prefs.getInt("Text_API", Constants.TextApi.BING.id)) {
-                    Constants.TextApi.AI.id -> when (prefs.getInt("Text_AI", Constants.TextAI.MLKIT.id)){
+                    Constants.TextApi.AI.id -> when (prefs.getInt(
+                        "Text_AI",
+                        Constants.TextAI.MLKIT.id
+                    )) {
                         Constants.TextAI.MLKIT.id -> translatorText = MLKitTranslation()
                         Constants.TextAI.NLLB.id -> translatorText = NLLBTranslation(this)
-                        else -> { showToast("Unknown Translator.") }
+                        else -> {
+                            showToast("Unknown Translator.")
+                        }
                     }
+
                     Constants.TextApi.BING.id -> translatorText = BingTranslation()
-                    Constants.TextApi.NIUTRANS.id -> translatorText = NiuTranslation(KeystoreManager.retrieveKey(this, "Niutrans")!!)
-                    Constants.TextApi.VOLC.id -> translatorText = VolcTranslation(KeystoreManager.retrieveKey(this, "Volc_ACCOUNT")!!, KeystoreManager.retrieveKey(this, "Volc_SECRETKEY")!!)
-                    Constants.TextApi.AZURE.id -> translatorText = AzureTranslation(KeystoreManager.retrieveKey(this, "Azure")!!)
-                    Constants.TextApi.BAIDU.id -> translatorText = BaiduTranslationText(KeystoreManager.retrieveKey(this, "Baidu_Translate_ACCOUNT")!!, KeystoreManager.retrieveKey(this, "Baidu_Translate_SECRETKEY")!!)
-                    Constants.TextApi.TENCENT.id -> translatorText = TencentTranslationText(KeystoreManager.retrieveKey(this, "Tencent_Cloud_ACCOUNT")!!, KeystoreManager.retrieveKey(this, "Tencent_Cloud_SECRETKEY")!!)
+                    Constants.TextApi.NIUTRANS.id -> translatorText =
+                        NiuTranslation(KeystoreManager.retrieveKey(this, "Niutrans")!!)
+
+                    Constants.TextApi.VOLC.id -> translatorText = VolcTranslation(
+                        KeystoreManager.retrieveKey(this, "Volc_ACCOUNT")!!,
+                        KeystoreManager.retrieveKey(this, "Volc_SECRETKEY")!!
+                    )
+
+                    Constants.TextApi.AZURE.id -> translatorText =
+                        AzureTranslation(KeystoreManager.retrieveKey(this, "Azure")!!)
+
+                    Constants.TextApi.BAIDU.id -> translatorText = BaiduTranslationText(
+                        KeystoreManager.retrieveKey(
+                            this,
+                            "Baidu_Translate_ACCOUNT"
+                        )!!, KeystoreManager.retrieveKey(this, "Baidu_Translate_SECRETKEY")!!
+                    )
+
+                    Constants.TextApi.TENCENT.id -> translatorText = TencentTranslationText(
+                        KeystoreManager.retrieveKey(
+                            this,
+                            "Tencent_Cloud_ACCOUNT"
+                        )!!, KeystoreManager.retrieveKey(this, "Tencent_Cloud_SECRETKEY")!!
+                    )
+
                     Constants.TextApi.CUSTOM_TEXT.id -> {
-                        val config = loadTextConfig(prefs, prefs.getInt("Custom_Text_API",0))
+                        val config = loadTextConfig(prefs, prefs.getInt("Custom_Text_API", 0))
                         if (config == null) {
                             showToast("No Custom Text API Config Found.")
-                        }else{
+                        } else {
                             translatorText = CustomTranslationText(config)
                         }
                     }
-                    else -> { showToast("Unknown Translator.") }
+
+                    else -> {
+                        showToast("Unknown Translator.")
+                    }
                 }
-            }else{
-                when (prefs.getInt("Pic_API", Constants.PicApi.BAIDU.id)){
-                    Constants.PicApi.BAIDU.id -> translatorPic = BaiduTranslationImage(KeystoreManager.retrieveKey(this, "Baidu_Translate_ACCOUNT")!!, KeystoreManager.retrieveKey(this, "Baidu_Translate_SECRETKEY")!!)
-                    Constants.PicApi.TENCENT.id -> translatorPic = TencentTranslationImage(KeystoreManager.retrieveKey(this, "Tencent_Cloud_ACCOUNT")!!, KeystoreManager.retrieveKey(this, "Tencent_Cloud_SECRETKEY")!!)
+            } else {
+                when (prefs.getInt("Pic_API", Constants.PicApi.BAIDU.id)) {
+                    Constants.PicApi.BAIDU.id -> translatorPic = BaiduTranslationImage(
+                        KeystoreManager.retrieveKey(
+                            this,
+                            "Baidu_Translate_ACCOUNT"
+                        )!!, KeystoreManager.retrieveKey(this, "Baidu_Translate_SECRETKEY")!!
+                    )
+
+                    Constants.PicApi.TENCENT.id -> translatorPic = TencentTranslationImage(
+                        KeystoreManager.retrieveKey(
+                            this,
+                            "Tencent_Cloud_ACCOUNT"
+                        )!!, KeystoreManager.retrieveKey(this, "Tencent_Cloud_SECRETKEY")!!
+                    )
+
                     Constants.PicApi.CUSTOM_PIC.id -> {
-                        val config = loadPicConfig(prefs, prefs.getInt("Custom_Pic_API",0))
+                        val config = loadPicConfig(prefs, prefs.getInt("Custom_Pic_API", 0))
                         if (config == null) {
                             showToast("No Custom Pic API Config Found.")
-                        }else{
+                        } else {
                             translatorPic = CustomTranslationImage(config)
                         }
                     }
-                    else -> { showToast("Unknown Translator.") }
+
+                    else -> {
+                        showToast("Unknown Translator.")
+                    }
                 }
             }
-        } catch (e: Exception){
+        } catch (e: Exception) {
             showToast("Initialize Error: ${e.message}")
         }
 
@@ -293,10 +343,12 @@ class FloatingBallService : LifecycleService() {
                     floatingBallInitialTouchY = event.rawY
 
                     // 开始长按检测
+                    handler.postDelayed(notlongPressRunnable, 200L)
                     handler.postDelayed(longPressRunnable, floatingBallConfig.LONG_PRESS_DELAY)
                     currentGesture = null
                     true
                 }
+
                 MotionEvent.ACTION_MOVE -> {
                     // 总移动距离
                     val totalMoveX = abs(event.rawX - floatingBallInitialTouchX)
@@ -305,6 +357,7 @@ class FloatingBallService : LifecycleService() {
                     // 判断总移动距离是否超出长按移动阈值
                     if (totalMoveX > floatingBallConfig.LONG_PRESS_SLOP || totalMoveY > floatingBallConfig.LONG_PRESS_SLOP) {
                         handler.removeCallbacks(longPressRunnable)
+                        handler.removeCallbacks(notlongPressRunnable)
                     }
 
                     // 如果移动距离足够大，判定为拖动
@@ -312,17 +365,20 @@ class FloatingBallService : LifecycleService() {
                         currentGesture = GestureType.Drag
                         // 更新悬浮球位置
                         floatingBallParams?.apply {
-                            x = (floatingBallInitialX + (event.rawX - floatingBallInitialTouchX)).toInt()
-                            y = (floatingBallInitialY + (event.rawY - floatingBallInitialTouchY)).toInt()
+                            x =
+                                (floatingBallInitialX + (event.rawX - floatingBallInitialTouchX)).toInt()
+                            y =
+                                (floatingBallInitialY + (event.rawY - floatingBallInitialTouchY)).toInt()
                             windowManager.updateViewLayout(floatingBallView, this)
                         }
                     }
                     true
                 }
+
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     // 移除长按检测
                     handler.removeCallbacks(longPressRunnable)
-
+                    handler.removeCallbacks(notlongPressRunnable)
                     // 处理点击事件
                     if (currentGesture == null) {
                         val totalMoveX = abs(event.rawX - floatingBallInitialTouchX)
@@ -335,6 +391,7 @@ class FloatingBallService : LifecycleService() {
                     currentGesture = null
                     true
                 }
+
                 else -> false
             }
         }
@@ -342,31 +399,36 @@ class FloatingBallService : LifecycleService() {
         floatingTextView.setOnTouchListener { view, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
-                    if(view.isClickable){
+                    if (view.isClickable) {
                         floatingTextViewInitialX = floatingTextViewParams?.x ?: 0
                         floatingTextViewInitialY = floatingTextViewParams?.y ?: 0
                         floatingTextViewInitialTouchX = event.rawX
                         floatingTextViewInitialTouchY = event.rawY
                         true
-                    }else{
+                    } else {
                         false
                     }
                 }
+
                 MotionEvent.ACTION_UP -> {
                     view.isClickable
                 }
+
                 MotionEvent.ACTION_MOVE -> {
-                    if(view.isClickable){
+                    if (view.isClickable) {
                         floatingTextViewParams?.apply {
-                            x = (floatingTextViewInitialX + (event.rawX - floatingTextViewInitialTouchX)).toInt()
-                            y = (floatingTextViewInitialY + (event.rawY - floatingTextViewInitialTouchY)).toInt()
+                            x =
+                                (floatingTextViewInitialX + (event.rawX - floatingTextViewInitialTouchX)).toInt()
+                            y =
+                                (floatingTextViewInitialY + (event.rawY - floatingTextViewInitialTouchY)).toInt()
                             windowManager.updateViewLayout(floatingTextView, this)
                         }
                         true
-                    }else{
+                    } else {
                         false
                     }
                 }
+
                 else -> {
                     false
                 }
@@ -382,7 +444,18 @@ class FloatingBallService : LifecycleService() {
         }
     }
 
+    private fun handlenotLongPress() {
+        if (currentBallStatus is BallStatus.Normal) {
+            if (isViewAdded(floatingTextView)) {
+                windowManager.removeView(floatingTextView)
+            }
+        }
+    }
+
     private fun showLongPressMenu() {
+        if (isViewAdded(floatingTextView)) {
+            windowManager.removeView(floatingTextView)
+        }
         val (dialog, listView) = Dialogs.menuDialog(applicationContext)
         listView.onItemClickListener = object : AdapterView.OnItemClickListener {
             override fun onItemClick(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
@@ -394,6 +467,7 @@ class FloatingBallService : LifecycleService() {
                             is BallStatus.Normal -> setCropView()
                         }
                     }
+
                     1 -> {
                         when (currentBallStatus) {
                             is BallStatus.Crop -> showToast(getString(R.string.crop_first))
@@ -401,27 +475,31 @@ class FloatingBallService : LifecycleService() {
                             is BallStatus.Normal -> setMovingTextView()
                         }
                     }
+
                     2 -> {
                         when (currentBallStatus) {
                             is BallStatus.Crop -> showToast(getString(R.string.crop_first))
                             is BallStatus.MovingText -> showToast(getString(R.string.textview_first))
                             is BallStatus.Normal -> {
-                                if(isViewAdded(floatingTextView)){
+                                if (isViewAdded(floatingTextView)) {
                                     windowManager.removeView(floatingTextView)
-                                }else{
+                                } else {
                                     showToast(getString(R.string.not_added_remove), true)
                                 }
                             }
                         }
                     }
+
                     3 -> {
                         // 设置字体大小
                         showFontSizeDialog()
                     }
+
                     4 -> {
                         // 停止服务，移除所有窗口（悬浮球、翻译结果框、框选框等）
                         stopServiceAndRemoveViews()
                     }
+
                     5 -> {
                         // 回到主界面
                         backToMainActivity()
@@ -433,15 +511,18 @@ class FloatingBallService : LifecycleService() {
         dialog.window?.setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY)
         dialog.show()
         dialog.window?.setBackgroundDrawableResource(R.drawable.dialog_background)
-        dialog.window?.setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
     }
 
-    private fun setCropView(){
+    private fun setCropView() {
 
         // 若有保存的裁剪框，则直接应用
-        if ((orientation == this.resources.configuration.orientation) && (mRectF != null)){
+        if ((orientation == this.resources.configuration.orientation) && (mRectF != null)) {
             cropView.setRect(mRectF!!)
-        }else{
+        } else {
             cropView.setRect(RectF(5f, 5f, 350f, 350f))
         }
 
@@ -456,10 +537,10 @@ class FloatingBallService : LifecycleService() {
         currentBallStatus = BallStatus.Crop
     }
 
-    private fun setMovingTextView(){
-        if(isViewAdded(floatingTextView)){
+    private fun setMovingTextView() {
+        if (isViewAdded(floatingTextView)) {
             setFloatingTextViewTouchable(true)
-        }else{
+        } else {
             windowManager.addView(floatingTextView, floatingTextViewParams)
 
             // 保持悬浮球在最上层
@@ -471,13 +552,14 @@ class FloatingBallService : LifecycleService() {
     }
 
     private fun handleClick() {
-        when (currentBallStatus){
+        when (currentBallStatus) {
             is BallStatus.Normal -> {
                 if (AccessibilityServiceManager.getService() == null) {
                     showToast(getString(R.string.accessibility_recycle))
                     return
-                }else{
-                    if(!isViewAdded(floatingTextView)){
+                } else {
+                    if (!isViewAdded(floatingTextView)) {
+                        floatingTextView.text = ""
                         windowManager.addView(floatingTextView, floatingTextViewParams)
 
                         // 保持悬浮球在最上层
@@ -485,28 +567,34 @@ class FloatingBallService : LifecycleService() {
                         windowManager.addView(floatingBallView, floatingBallParams)
                         setFloatingTextViewTouchable(false)
                     }
-                    if (orientation == this.resources.configuration.orientation){
-                        if(isTranslating.get()){
+                    if (orientation == this.resources.configuration.orientation) {
+                        if (isTranslating.get()) {
                             showToast(getString(R.string.is_translating), true)
-                        }else{
-                            AccessibilityServiceManager.takeScreenshot(mRectF, cropView.absolutePointOffset)
+                        } else {
+                            AccessibilityServiceManager.takeScreenshot(
+                                mRectF,
+                                cropView.absolutePointOffset
+                            )
                         }
-                    }else{
+                    } else {
                         showToast(getString(R.string.orientation_changed))
                     }
+
                 }
             }
+
             is BallStatus.Crop -> {
                 mRectF = cropView.mRect
                 windowManager.removeView(cropView)
-                if (!(prefs.getBoolean("Custom_Adjust_Not_Text", false))){
+                if (!(prefs.getBoolean("Custom_Adjust_Not_Text", false))) {
                     showToast(getString(R.string.finish_crop), true)
                 }
                 currentBallStatus = BallStatus.Normal
             }
+
             is BallStatus.MovingText -> {
                 setFloatingTextViewTouchable(false)
-                if (!(prefs.getBoolean("Custom_Adjust_Not_Text", false))){
+                if (!(prefs.getBoolean("Custom_Adjust_Not_Text", false))) {
                     showToast(getString(R.string.finish_textview), true)
                 }
                 currentBallStatus = BallStatus.Normal
@@ -528,7 +616,7 @@ class FloatingBallService : LifecycleService() {
         }
     }
 
-    private fun showFontSizeDialog(){
+    private fun showFontSizeDialog() {
         val dialog = Dialogs.fontSizeDialog(this, floatingTextView, null)
         dialog.window?.setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY)
         dialog.show()
@@ -547,42 +635,51 @@ class FloatingBallService : LifecycleService() {
 
     private suspend fun processScreenshot(bitmap: Bitmap) {
         Log.d("SCREENSHOT", "processScreenShot")
-        try{
-            if(prefs.getInt("Translate_Mode", 0) == 0){
+        try {
+            if (prefs.getInt("Translate_Mode", 0) == 0) {
                 // OCR后文本翻译
-                val txt = OCRTextRecognizer.getPicText(prefs.getString("Source_Language", "ja"), bitmap, prefs.getInt("Custom_OCR_Merge_Mode", 2))
+                val txt = OCRTextRecognizer.getPicText(
+                    prefs.getString("Source_Language", "ja"),
+                    bitmap,
+                    prefs.getInt("Custom_OCR_Merge_Mode", 2)
+                )
                 translateByText(txt)
-            }else{
+            } else {
                 // 上传图片翻译，注意要创建bitmap副本并交给图片翻译API处理
                 val bitmapCopy = bitmap.copy(bitmap.config!!, true)
                 translateByPic(bitmapCopy)  // 副本的生命周期由翻译API管理
             }
-        }catch (e: Exception){
+        } catch (e: Exception) {
             isTranslating.set(false)
             e.printStackTrace()
             showToast("Translate Failed：$e")
-        }finally {
+        } finally {
             bitmap.recycle()
         }
     }
 
     // 文本翻译
-    private fun translateByText(str: String){
-        translatorText?.getTranslation(str, prefs.getString("Source_Language", "ja"), prefs.getString("Target_Language", "zh")){
-            result->
+    private fun translateByText(str: String) {
+        translatorText?.getTranslation(
+            str,
+            prefs.getString("Source_Language", "ja"),
+            prefs.getString("Target_Language", "zh")
+        ) { result ->
             lifecycleScope.launch(Dispatchers.Main) {
                 when (result) {
                     is TranslationResult.Success -> {
-                        if(prefs.getInt("Custom_Show_Source_Mode", 0) == 0){
+                        if (prefs.getInt("Custom_Show_Source_Mode", 0) == 0) {
                             floatingTextView.text = result.translatedText
-                        }else if(prefs.getInt("Custom_Show_Source_Mode", 0) == 1){
-                            floatingTextView.text = str+"\n\n"+result.translatedText
-                        }else{
-                            floatingTextView.text = result.translatedText+"\n\n"+str
+                        } else if (prefs.getInt("Custom_Show_Source_Mode", 0) == 1) {
+                            floatingTextView.text = str + "\n\n" + result.translatedText
+                        } else {
+                            floatingTextView.text = result.translatedText + "\n\n" + str
                         }
                     }
+
                     is TranslationResult.Error -> {
-                        floatingTextView.text = getString(R.string.translation_failed, result.error.message)
+                        floatingTextView.text =
+                            getString(R.string.translation_failed, result.error.message)
                     }
                 }
                 isTranslating.set(false)
@@ -590,16 +687,21 @@ class FloatingBallService : LifecycleService() {
         }
     }
 
-    private fun translateByPic(bitmap: Bitmap){
-        translatorPic?.getTranslation(bitmap, prefs.getString("Source_Language", "ja"), prefs.getString("Target_Language", "zh")){
-                result->
+    private fun translateByPic(bitmap: Bitmap) {
+        translatorPic?.getTranslation(
+            bitmap,
+            prefs.getString("Source_Language", "ja"),
+            prefs.getString("Target_Language", "zh")
+        ) { result ->
             lifecycleScope.launch(Dispatchers.Main) {
                 when (result) {
                     is TranslationResult.Success -> {
                         floatingTextView.text = result.translatedText
                     }
+
                     is TranslationResult.Error -> {
-                        floatingTextView.text = getString(R.string.translation_failed, result.error.message)
+                        floatingTextView.text =
+                            getString(R.string.translation_failed, result.error.message)
                     }
                 }
                 isTranslating.set(false)
@@ -646,6 +748,7 @@ class FloatingBallService : LifecycleService() {
             translatorText?.release()
             translatorPic?.release()
             handler.removeCallbacks(longPressRunnable)
+            handler.removeCallbacks(notlongPressRunnable)
             lifecycleScope.cancel()
 
             // 发送服务停止的广播
@@ -662,7 +765,7 @@ class FloatingBallService : LifecycleService() {
 
     private fun setFloatingTextViewTouchable(touchable: Boolean) {
         floatingTextView.isClickable = touchable
-        if (prefs.getBoolean("Custom_Result_Penetrability", true)){
+        if (prefs.getBoolean("Custom_Result_Penetrability", true)) {
             floatingTextViewParams?.apply {
                 if (touchable) {
                     flags = flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
@@ -692,6 +795,7 @@ class FloatingBallService : LifecycleService() {
         translatorText?.release()
         translatorPic?.release()
         handler.removeCallbacks(longPressRunnable)
+        handler.removeCallbacks(notlongPressRunnable)
         lifecycleScope.cancel()
     }
 }

@@ -78,57 +78,14 @@ class Developer : Fragment() {
         val cele = binding.konfettiViewd
         cele.start(party)
         cele.start(party2)
-        binding.officialwebsite.setOnClickListener {
-            val url = "https://www.moetranslate.top/"
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.data = Uri.parse(url)
-            startActivity(intent)
-        }
-        binding.ideas.setOnClickListener {
-            val url = "https://www.wjx.cn/vm/rXUEKnh.aspx"
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.data = Uri.parse(url)
-            startActivity(intent)
-        }
-        binding.donate.setOnClickListener {
-            val dialog = AlertDialog.Builder(requireContext())
-                .setTitle(R.string.donate_proj)
-                .setMessage(R.string.donate_proj_content)
-                .setCancelable(false)
-                .setNegativeButton(R.string.user_cancel) { _, _ -> }
-                .setPositiveButton(R.string.jump) { _, _ ->
-                    val url = "https://www.moetranslate.top/support/"
-                    val intent = Intent(Intent.ACTION_VIEW)
-                    intent.data = Uri.parse(url)
-                    startActivity(intent)
-                }
-                .create()
-            dialog.show()
-            dialog.window?.setBackgroundDrawableResource(R.drawable.dialog_background)
-        }
-        binding.wechat.setOnClickListener {
-            val dialog = AlertDialog.Builder(requireContext())
-                .setTitle(R.string.wechat_official_account_title)
-                .setMessage(R.string.wechat_official_account_content)
-                .setCancelable(false)
-                .setPositiveButton(R.string.user_known) { _, _ -> }
-                .create()
-
-            val imageView = ImageView(requireContext())
-            val qrCodeDrawable = ResourcesCompat.getDrawable(resources, R.drawable.qrcode, null)
-            imageView.setImageDrawable(qrCodeDrawable)
-            dialog.setView(imageView)
-            dialog.show()
-            dialog.window?.setBackgroundDrawableResource(R.drawable.dialog_background)
-        }
 
         binding.github.setOnClickListener {
             val dialogperapi = AlertDialog.Builder(activity)
-                .setTitle(R.string.github_repo_title)
+                .setTitle("Fork版本的仓库")
                 .setMessage(R.string.github_repo_content)
                 .setCancelable(false)
                 .setPositiveButton(R.string.have_look) { _, _ ->
-                    val url = "https://github.com/murangogo/MoeTranslate"
+                    val url = "https://github.com/Genouka/YetAnotherMoeTranslate"
                     val intent = Intent(Intent.ACTION_VIEW)
                     intent.data = Uri.parse(url)
                     startActivity(intent)

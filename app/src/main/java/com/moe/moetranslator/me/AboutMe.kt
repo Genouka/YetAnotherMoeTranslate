@@ -88,11 +88,6 @@ class AboutMe : Fragment() {
                 startActivity(intent)
             }
         }
-        binding.readBtn.setOnClickListener {
-            val intent = Intent(requireContext(), SettingPageActivity::class.java)
-            intent.putExtra(SettingPageActivity.EXTRA_FRAGMENT_TYPE, SettingPageActivity.TYPE_FRAGMENT_READ)
-            startActivity(intent)
-        }
         binding.faqBtn.setOnClickListener {
             val intent = Intent(requireContext(), SettingPageActivity::class.java)
             intent.putExtra(SettingPageActivity.EXTRA_FRAGMENT_TYPE, SettingPageActivity.TYPE_FRAGMENT_FAQ)
@@ -102,10 +97,6 @@ class AboutMe : Fragment() {
             val intent = Intent(requireContext(), SettingPageActivity::class.java)
             intent.putExtra(SettingPageActivity.EXTRA_FRAGMENT_TYPE, SettingPageActivity.TYPE_FRAGMENT_ERROR_CODE)
             startActivity(intent)
-        }
-        binding.updateBtn.setOnClickListener{
-            showToast(getString(R.string.getting_update))
-            checkForUpdate()
         }
         binding.cleanBtn.setOnClickListener {
             showClearCacheDialog()
@@ -138,30 +129,9 @@ class AboutMe : Fragment() {
     }
 
     private fun checkForUpdate() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            when (val result = updateChecker.checkForUpdate()) {
-                is UpdateResult.UpdateAvailable -> { showUpdateDialog(result) }
-                is UpdateResult.NoUpdate -> { showToast(getString(R.string.no_update)) }
-                else -> { showToast(getString(R.string.internet_error)) }
-            }
-        }
     }
 
     private fun showUpdateDialog(update: UpdateResult.UpdateAvailable) {
-        val dialog = AlertDialog.Builder(requireContext())
-            .setTitle(R.string.find_new_version)
-            .setMessage(getString(R.string.version_name)+ update.versionName+"\n${update.versionDescription}\n"+getString(R.string.update_prompt))
-            .setCancelable(false)
-            .setPositiveButton(R.string.go_to_update) { _, _ ->
-                val url = "https://www.moetranslate.top/"
-                val intent = Intent(Intent.ACTION_VIEW)
-                intent.data = Uri.parse(url)
-                startActivity(intent)
-            }
-            .setNegativeButton(R.string.not_update, null)
-            .create()
-        dialog.show()
-        dialog.window?.setBackgroundDrawableResource(R.drawable.dialog_background)
     }
 
     private fun getCacheSize(): String {

@@ -27,10 +27,6 @@ import androidx.lifecycle.lifecycleScope
 import com.moe.moetranslator.BaseActivity
 import com.moe.moetranslator.MainActivity
 import com.moe.moetranslator.R
-import com.moe.moetranslator.madoka.Live2DFileUtil
-import com.moe.moetranslator.madoka.Live2DModel
-import com.moe.moetranslator.madoka.ModelInfoRepository
-import com.moe.moetranslator.madoka.ModelInfoRoomDatabase
 import com.moe.moetranslator.utils.AppPathManager
 import com.moe.moetranslator.utils.CustomPreference
 import com.moe.moetranslator.utils.UtilTools
@@ -43,9 +39,6 @@ import java.util.Locale
 
 class LaunchActivity : BaseActivity() {
     private lateinit var prefs: CustomPreference
-    private lateinit var database: ModelInfoRoomDatabase
-    private lateinit var repository: ModelInfoRepository
-    private lateinit var fileUtil: Live2DFileUtil
 
 
     // 使用lifecycleScope替代MainScope
@@ -62,9 +55,6 @@ class LaunchActivity : BaseActivity() {
         // 初始化工具类
         UtilTools.init(this)
         prefs = CustomPreference.getInstance(this)
-        database = ModelInfoRoomDatabase.getDatabase(this)
-        repository = ModelInfoRepository(database.ModelInfoDAO())
-        fileUtil = Live2DFileUtil(this)
 
         setContentView(R.layout.activity_launch)
 
@@ -83,32 +73,11 @@ class LaunchActivity : BaseActivity() {
                 delay(1500)
 
                 if (prefs.getBoolean("Is_First_Run", true)) {
-                    // 在IO线程中初始化资源
-                    withContext(Dispatchers.IO) {
-                        val initializer = AssetsInitializer(this@LaunchActivity)
-                        initializer.initializeLive2DResources()
-                        // 保存模型信息
-                        repository.insertModel(Live2DModel("model_1", getString(R.string.madoka_newyear)))
-
-                        // 扫描并保存表情信息
-                        val expressions = fileUtil.scanExpressions("model_1")
-                        if (expressions.isNotEmpty()) {
-                            repository.insertExpressions(expressions)
-                        }
-
-                        // 扫描并保存动作信息
-                        val motions = fileUtil.scanMotions("model_1")
-                        if (motions.isNotEmpty()) {
-                            repository.insertMotions(motions)
-                        }
-                    }
-
                     prefs.setBoolean("Is_First_Run", false)
                     startActivity(Intent(this@LaunchActivity, FirstLaunchPage::class.java))
                 } else {
                     startActivity(Intent(this@LaunchActivity, MainActivity::class.java))
                 }
-
                 finish()
             } catch (e: Exception) {
                 // 处理初始化失败的情况
